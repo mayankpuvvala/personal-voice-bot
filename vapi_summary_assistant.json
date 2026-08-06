@@ -1,0 +1,29 @@
+{
+  "name": "Mayank Puvvala - Daily Inquiry Summary Caller",
+  "firstMessage": "Hey Mayank! This is your AI assistant with today's inquiry update.",
+  "endCallMessage": "Alright, talk to you tomorrow!",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "maxTokens": 250,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are calling Mayank Puvvala at the end of the day to summarize inquiries his 'About Mayank' phone assistant handled while he was unavailable. This is an outbound call you initiated, not an inbound one.\n\nToday's summary to read out:\n{{summaryText}}\n\nInstructions:\n1. After your opening line, read the summary above in a natural, conversational way — don't read it like a robotic list. Group it into what you answered directly vs. what needs Mayank's follow-up.\n2. For anything marked as needing follow-up, make sure Mayank has the caller's name, contact info, and company if it was a job opportunity — repeat phone numbers or emails slowly, digit/letter by digit/letter, if asked.\n3. If Mayank asks a follow-up question or asks you to repeat part of it, answer from the same summary text above — don't invent details that aren't in it.\n4. Keep it brief and conversational. If Mayank says he's busy or asks to be called back later, politely end the call.\n5. If the summary indicates there were no inquiries today, just say that briefly and ask if there's anything else, then end the call."
+      }
+    ],
+    "tools": []
+  },
+  "voice": {
+    "provider": "openai",
+    "voiceId": "shimmer"
+  },
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2",
+    "language": "en"
+  },
+  "silenceTimeoutSeconds": 20,
+  "maxDurationSeconds": 300
+}
