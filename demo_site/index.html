@@ -125,8 +125,9 @@
   /* ---------- visualizer + duration (only visible mid-call) ---------- */
   .call-meta {
     display: none;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     margin-bottom: 24px;
   }
 
@@ -138,23 +139,40 @@
     display: flex;
     align-items: center;
     gap: 3px;
-    height: 22px;
+    height: 32px;
   }
 
   .visualizer .bar {
     width: 3px;
     height: 4px;
     border-radius: 2px;
-    background: var(--accent);
+    background: linear-gradient(180deg, var(--accent), #155e75);
     transition: height 0.09s ease;
   }
 
   .duration {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: "SF Mono", ui-monospace, Menlo, monospace;
-    font-size: 13px;
-    color: var(--muted);
-    min-width: 42px;
-    text-align: left;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .duration::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--live);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
   }
 
   /* ---------- controls ---------- */
@@ -211,33 +229,46 @@
   #status.live { color: var(--live); font-weight: 600; }
   #status.error { color: var(--error); }
 
-  .scroll-hint {
-    position: absolute;
-    bottom: 22px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: transparent;
-    color: var(--muted);
-    box-shadow: none;
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 8px 14px;
-    display: flex;
-    flex-direction: column;
+  /* ---------- portfolio option: fixed bottom-right ---------- */
+  .portfolio-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 20;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 7px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 26px -10px rgba(16, 24, 43, 0.5);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease;
   }
 
-  .scroll-hint:hover { background: rgba(0,0,0,0.03); color: var(--ink); }
+  .portfolio-fab:hover { background: #262f45; transform: translateY(-2px); }
+  .portfolio-fab:active { transform: translateY(0); }
 
-  .scroll-hint .chevron {
-    animation: bob 1.8s ease-in-out infinite;
-    font-size: 14px;
+  .portfolio-fab .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--live);
+    flex-shrink: 0;
   }
 
-  @keyframes bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
+  @media (max-width: 480px) {
+    .portfolio-fab {
+      right: 14px;
+      bottom: 14px;
+      padding: 9px 16px;
+      font-size: 12.5px;
+    }
   }
 
   /* ---------- portfolio section (below the fold, reached by scrolling) ---------- */
@@ -326,12 +357,12 @@
     </div>
 
     <div id="status"></div>
-
-    <button class="scroll-hint" id="scrollHint" type="button">
-      <span>Prefer to read? View my portfolio</span>
-      <span class="chevron">↓</span>
-    </button>
   </section>
+
+  <button class="portfolio-fab" id="portfolioFab" type="button">
+    <span class="dot"></span>
+    <span>View my portfolio</span>
+  </button>
 
   <section class="portfolio-section" id="portfolio">
     <h2>Or explore my portfolio</h2>
@@ -366,7 +397,7 @@
     const visualizer = document.getElementById("visualizer");
     const ring1 = document.getElementById("ring1");
     const ring2 = document.getElementById("ring2");
-    const scrollHint = document.getElementById("scrollHint");
+    const portfolioFab = document.getElementById("portfolioFab");
 
     let inCall = false;
     let muted = false;
@@ -422,7 +453,7 @@
         const mid = BAR_COUNT / 2;
         const falloff = 1 - Math.abs(i - mid) / mid * 0.6;
         const jitter = 0.75 + Math.random() * 0.5;
-        const height = Math.max(4, base * 20 * falloff * jitter);
+        const height = Math.max(4, base * 28 * falloff * jitter);
         bar.style.height = `${height}px`;
       });
     }
@@ -445,7 +476,7 @@
       muteBtn.setAttribute("aria-label", muted ? "Unmute microphone" : "Mute microphone");
     });
 
-    scrollHint.addEventListener("click", () => {
+    portfolioFab.addEventListener("click", () => {
       document.getElementById("portfolio").scrollIntoView({ behavior: "smooth" });
     });
 
