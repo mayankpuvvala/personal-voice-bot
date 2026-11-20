@@ -1,113 +1,44 @@
-# Mayank Puvvala — Personal Voice Assistant
+# Personal Voice Bot — Mayank Puvvala
 
-A phone/browser bot that speaks on Mayank's behalf, built the same way as
-`restaurant_voice_bot` (Vapi + n8n), repointed at his own background instead
-of a restaurant's:
+**Live demo:** https://mayankpuvvala.github.io/personal-voice-bot/
 
-1. The bot answers as Mayank's AI assistant — clearly not Mayank himself,
-   never pretends otherwise if asked.
-2. It answers questions it knows (experience, skills, projects, education,
-   links) from a facts block sourced from his resume and public profiles,
-   and takes a message (name + contact + question/opportunity) for anything
-   it doesn't.
-3. Every night, it can call Mayank with a spoken summary of everyone who
-   reached out that day — who asked what, and who needs a follow-up.
+A browser voice assistant that answers questions about my background (experience, skills, projects) and takes a message when it should not invent an answer.
 
-## Knowledge base
+Built as a portfolio demo of the same patterns I use in production voice agents: grounded facts, clear “I’m an AI assistant” framing, and a clean handoff when human follow-up is needed.
 
-`knowledge_base.md` is the single source of truth for what the assistant
-knows about Mayank. It was built from:
+---
 
-- **Resume** (master, per your instruction): `Mayank_Puvvala_GenAI.pdf` in
-  Downloads root.
-- **GitHub** (github.com/mayankpuvvala) — bio + pinned repos, fetched.
-- **Hugging Face** (huggingface.co/mayankpuvvala) — Spaces, models, datasets,
-  fetched.
-- **Medium** (medium.com/@puvvalamayank) — post titles + summaries, fetched.
-- **LinkedIn** (linkedin.com/in/mayankpuvvala) — **not fetched**, LinkedIn
-  blocks automated requests. If you want its content (headline, About
-  section, recommendations) included, paste it into `knowledge_base.md`
-  manually and then update the facts block in `vapi_assistant.json`.
-- **LeetCode** (leetcode.com/u/mayankpuvvala) — **not fetched**, same
-  reason. Same manual-add path if you want stats included.
+## Why this exists
 
-There are 40+ other resumes in your Downloads/Resumes folder tailored to
-specific companies/roles — none of those were read or used. If you want the
-assistant to speak to a specific role focus (e.g. backend, full-stack)
-instead of the GenAI-generalist framing in the master resume, tell me which
-file and I'll fold it in.
+Recruiters and hiring managers can **talk to the bot** instead of only reading a PDF:
 
-Edit `knowledge_base.md` first when anything changes (new role, new
-project, updated links), then copy the relevant bits into the `=== ABOUT
-MAYANK ===` block in `vapi_assistant.json`'s system prompt — Vapi reads the
-JSON, not the markdown file.
+- What I’ve shipped (RAG, voice agents, fine-tuning)
+- Links to live demos and GitHub
+- Leave name + contact + opportunity for me to follow up
 
-## Architecture
+---
 
-```
-Phase 1 (today, $0):
-  Recruiter / visitor ──"Talk to Assistant" (browser)──> Vapi bot
-                                                              │
-                                                 bot calls logInquiry tool
-                                                              │
-                                             n8n "Log Inquiry" webhook
-                                                              │
-                                         appends row to Google Sheet ("Log" tab)
+## How it works (high level)
 
-  Manually run n8n's "End of Day" branch → builds a sample summary from
-  today's rows → (once Phase 2 wired up) calls Mayank via Vapi.
+1. Facts live in a single knowledge source (resume + public profiles).
+2. The assistant answers only from that block — no free-form biography invention.
+3. Unknown / sensitive asks → take a message rather than guess.
 
-Phase 2 (once you attach a real phone number):
-  Caller ──call──> Vapi phone number ──> bot answers ──> same logging
-                                                            pipeline as above
+Related production work:
 
-  Nightly: n8n Schedule Trigger → reads today's Sheet rows → builds summary
-           → POSTs to Vapi's outbound Call API → Vapi calls Mayank and
-             reads the summary, can answer follow-ups from it
-```
+- [voice_pipecat](https://github.com/mayankpuvvala/voice_pipecat) — Hinglish phone receptionist (Pipecat, telephony, evals)
+- [voice_agents](https://github.com/mayankpuvvala/voice_agents) — browser receptionist with dashboard
+- [Financial_RAG](https://github.com/mayankpuvvala/Financial_RAG) — agentic SEC Q&A (live)
 
-## Files in this folder
+---
 
-- `knowledge_base.md` — source of truth for what the assistant knows about
-  Mayank. Edit here first.
-- `vapi_assistant.json` — the "Mayank Puvvala - AI Assistant" (answers
-  questions / takes messages for opportunities). Test directly in Vapi's
-  dashboard.
-- `vapi_summary_assistant.json` — the assistant used for the nightly call to
-  Mayank with a digest of the day's inquiries. Also testable directly.
-- `personal_reception_workflow.json` — import into n8n. Two branches:
-  log-inquiry webhook, and the end-of-day summary call.
-- `demo_call_widget.html` / `demo_site/index.html` — standalone "Start Call"
-  browser widget (same file, `demo_site/index.html` is the one to deploy,
-  e.g. to GitHub Pages).
+## Stack
 
-## Setup
+Vapi / n8n-style orchestration patterns · facts from master resume · static site on GitHub Pages
 
-Same steps as `restaurant_voice_bot`'s README, with these substitutions:
+---
 
-1. **n8n on Railway**: import `personal_reception_workflow.json` instead of
-   the restaurant one.
-2. **Google Sheet**: create a tab named `Log` with header row
-   `Timestamp | CallDate | CallerName | CallerContact | Topic | Resolved | Details | Company`.
-3. **Vapi assistants**: paste `vapi_assistant.json` as a new Assistant
-   (Edit as JSON), fill in `server.url` with the Log Inquiry webhook's
-   Production URL. Create a second Assistant from
-   `vapi_summary_assistant.json` for the nightly digest call.
-4. **Config nodes**: same as before — `timeZone`, `googleSheetId` on the Log
-   branch; add `mayankPhoneNumber`, `vapiPhoneNumberId`,
-   `vapiSummaryAssistantId` on the Summary branch once you have Phase 2's
-   phone number.
-5. **Demo widget**: fill in `VAPI_PUBLIC_KEY` and `VAPI_ASSISTANT_ID` in
-   `demo_call_widget.html` / `demo_site/index.html` — these are placeholders,
-   not reused from the restaurant project's demo (those keys belong to that
-   assistant only).
+## Author
 
-## Notes
-
-- The assistant is written to be transparent that it's an AI assistant
-  representing Mayank, not Mayank himself — if asked, it says so plainly.
-- It won't invent salary expectations, availability/notice period, or any
-  detail not present in the facts block — it takes a message for those
-  instead of guessing.
-- `logInquiry`'s `company` field replaces the restaurant bot's
-  `guestsCount` — it's populated only when the inquiry is a job opportunity.
+**Mayank Puvvala** — ML / LLM Application Engineer (Hyderabad)  
+[LinkedIn](https://www.linkedin.com/in/mayankpuvvala/) · [GitHub](https://github.com/mayankpuvvala) · [Email](mailto:puvvalamayank@gmail.com)
